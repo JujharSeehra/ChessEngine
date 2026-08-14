@@ -1,6 +1,8 @@
 import pygame
 from sys import exit
 from evaluation import pieceArray, evaluate_board
+import math
+
 
 pygame.init()
 
@@ -563,7 +565,9 @@ while True:
                         else:
                             player = -1
 
-                        print(f"Evaluation: {evaluate_board()}")
+                        evaluation = evaluate_board(pieceArray, is_valid_move, move_leaves_king_in_check, is_in_check, can_attack_square)
+
+                        print(f"Evaluation: {evaluation}")
 
                         if is_checkmate(player):
                             print(f"Checkmate! {"Black" if player == 1 else "White"} wins!")
