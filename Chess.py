@@ -32,6 +32,8 @@ white_right_rook_moved = False
 black_left_rook_moved = False
 black_right_rook_moved = False
 
+en_passant_target = None
+
 
 pieceArray = [
     [-5,-4,-3,-2,-6,-3,-4,-5],
@@ -215,21 +217,55 @@ def move_leaves_king_in_check(old_row, old_col, new_row, new_col):
     captured_piece = pieceArray[new_row][new_col]
     moving_piece = pieceArray[old_row][old_col]
 
+    is_en_passant = can_en_passant(old_row, old_col, new_row, new_col)
+
     pieceArray[new_row][new_col] = moving_piece
     pieceArray[old_row][old_col] = 0
+
+    en_passant_captured = 0
+    if is_en_passant:
+        en_passant_captured = pieceArray[old_row][new_col]
+        pieceArray[old_row][new_col]= 0
 
     if moving_piece > 0:
         king = 6
     else:
         king = -6
 
-    in_check = is_in_check(king)
+    in_check = is_in_check(king)    
 
     pieceArray[old_row][old_col] = moving_piece
     pieceArray[new_row][new_col] = captured_piece
 
+    if is_en_passant:
+        pieceArray[old_row][new_col] = en_passant_captured
+
     return in_check
 
+def can_en_passant(old_row, old_col, new_row, new_col):
+
+    piece = pieceArray[old_row][old_col]
+
+    if abs(piece) != 1:
+        return False
+
+    if en_passant_target != (new_row, new_col):
+        return False
+
+    if piece > 0:
+        if old_row - new_row == 1 and abs(new_col - old_col) == 1:
+
+            # Enemy pawn must be beside it
+            if pieceArray[old_row][new_col] == -1:
+                return True
+
+    else:
+        if new_row - old_row == 1 and abs(new_col - old_col) == 1:
+
+            if pieceArray[old_row][new_col] == 1:
+                return True
+
+    return False
 
 def is_valid_move(old_row, old_col, new_row, new_col, check_turn = True):
     piece = pieceArray[old_row][old_col]
@@ -253,6 +289,10 @@ def is_valid_move(old_row, old_col, new_row, new_col, check_turn = True):
     # Nothing selected
     if piece == 0:
         return False
+
+    if can_en_passant(old_row, old_col, new_row, new_col):
+        return True
+
 
     # Difference in rows and columns
     row_change = new_row - old_row
@@ -495,10 +535,14 @@ while True:
 
                 if is_valid_move(old_row, old_col, row, col):
                     if not move_leaves_king_in_check(old_row, old_col, row, col):
-
+                        moving_piece = pieceArray[old_row][old_col]
+                        is_en_passant = can_en_passant(old_row, old_col, row, col)
                         pieceArray[row][col] = pieceArray[old_row][old_col]
                         pieceArray[old_row][old_col] = 0
-                        
+
+                        if is_en_passant:
+                            pieceArray[old_row][col] = 0
+
                         if pieceArray[row][col] == 6 and old_row == 7 and old_col == 4 and row == 7 and col == 6:
                             pieceArray[7][5] = pieceArray[7][7]
                             pieceArray[7][7] = 0
@@ -513,6 +557,14 @@ while True:
                         elif pieceArray[row][col] == -6 and old_row == 0 and old_col == 4 and row == 0 and col == 2:
                             pieceArray[0][3] = pieceArray[0][0]
                             pieceArray[0][0] = 0
+
+                        en_passant_target = None
+
+                        if moving_piece == 1 and old_row == 6 and row == 4:
+                            en_passant_target = (5, col)
+                        elif moving_piece == -1 and old_row == 1 and row == 3:
+                            en_passant_target = (2, col)
+                        
                         turn += 1
                         if turn % 2 == 0:
                             player = 1
