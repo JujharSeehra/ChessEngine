@@ -23,6 +23,16 @@ turn = 0
 
 game_over = False
 
+white_king_moved = False
+black_king_moved = False
+
+white_left_rook_moved = False
+white_right_rook_moved = False
+
+black_left_rook_moved = False
+black_right_rook_moved = False
+
+
 pieceArray = [
     [-5,-4,-3,-2,-6,-3,-4,-5],
     [-1,-1,-1,-1,-1,-1,-1,-1],
@@ -184,6 +194,23 @@ def is_in_check(x):
 
     return False
 
+def can_attack_square(row, col, enemy):
+    for i in range(8):
+        for j in range(8):
+            piece = pieceArray[i][j]
+
+            if piece == 0:
+                continue
+
+            if enemy == 1 and piece > 0:
+                if can_attack(i,j,row,col):
+                    return True
+
+            elif enemy == -1 and piece < 0:
+                if can_attack(i, j, row, col):
+                    return True
+    return False
+
 def move_leaves_king_in_check(old_row, old_col, new_row, new_col):
     captured_piece = pieceArray[new_row][new_col]
     moving_piece = pieceArray[old_row][old_col]
@@ -296,6 +323,12 @@ def is_valid_move(old_row, old_col, new_row, new_col, check_turn = True):
         if abs(row_change) <= 1 and abs(col_change) <= 1:
             return True
 
+        if row_change == 0 and abs(col_change) == 2:
+            if col_change > 0:
+                return can_castle(old_row, old_col, new_row, new_col, "right")
+        if row_change == 0 and abs(col_change) == 3:
+            return can_castle(old_row, old_col, new_row, new_col, "left")
+
         return False
 
     return False
@@ -345,6 +378,97 @@ def is_stalemate(player):
         return False
     return True
 
+def can_castle(old_row, old_col, new_row, new_col, direction):
+    if pieceArray[old_row][old_col] == 6:
+        if old_row != 7 or old_col != 4:
+            return False
+
+        if white_king_moved:
+            return False
+
+        if direction == "right":
+
+            if white_right_rook_moved:
+                return False
+
+            if pieceArray[7][7] != 5:
+                return False
+
+            if pieceArray[7][5] != 0 or pieceArray[7][6] != 0:
+                return False
+
+            if is_in_check(6):
+                return False
+
+            if can_attack_square(7,5,-1):
+                return False
+
+            return new_row == 7 and new_col == 6
+
+        if direction == "left":
+            if white_left_rook_moved:
+                return False
+
+            if pieceArray[7][0] != 5:
+                return False
+
+            if ((pieceArray[7][1] or pieceArray[7][2] or pieceArray[7][3]) != 0):
+                return False
+
+            if is_in_check(6):
+                return False
+
+            if can_attack_square(7,3,-1):
+                return False
+
+            if can_attack_square(7,2,-1):
+                return False
+
+            return new_row == 7 and new_col == 2
+
+    if pieceArray[old_row][old_col] == -6:
+        if old_row != 0 or old_col != 4: 
+            return False
+
+        if black_king_moved:
+            return False
+
+        if direction == "right":
+            if black_right_rook_moved:
+                return False
+            if pieceArray[0][7] != -5:
+                return False
+            if pieceArray[0][5] != 0 or pieceArray[0][6] != 0:
+                return False
+            if pieceArray[0][5] != 0 or pieceArray[0][6] != 0:
+                return False
+            if is_in_check(-6):
+                return False
+            if can_attack_square(0,5,1):
+                return False
+            if can_attack_square(0,6,1):
+                return False
+            return new_row == 0 and new_col == 6
+
+        if direction == "left":
+            if black_left_rook_moved:
+                return False
+            if pieceArray[0][0] != -5:
+                return False
+            if ((pieceArray[0][1] or pieceArray[0][2] or pieceArray[0][3]) != 0):
+                return False
+            if is_in_check(-6):
+                return False
+            if can_attack_square(0,3,1):
+                return False
+            if can_attack_square(0,2,1):
+                return False
+
+            return new_row == 0 and new_col == 2
+
+    return False
+
+
 
 LIGHT = (240,217,181)
 DARK = (181,136,99)
@@ -374,6 +498,21 @@ while True:
 
                         pieceArray[row][col] = pieceArray[old_row][old_col]
                         pieceArray[old_row][old_col] = 0
+                        
+                        if pieceArray[row][col] == 6 and old_row == 7 and old_col == 4 and row == 7 and col == 6:
+                            pieceArray[7][5] = pieceArray[7][7]
+                            pieceArray[7][7] = 0
+
+                        elif pieceArray[row][col] == 6 and old_row == 7 and old_col == 4 and row == 7 and col == 2:
+                            pieceArray[7][3] = pieceArray[7][0]
+                            pieceArray[7][0] = 0
+
+                        elif pieceArray[row][col] == -6 and old_row == 0 and old_col == 4 and row == 0 and col == 6:
+                            pieceArray[0][5] = pieceArray[0][7]
+                            pieceArray[0][7] = 0
+                        elif pieceArray[row][col] == -6 and old_row == 0 and old_col == 4 and row == 0 and col == 2:
+                            pieceArray[0][3] = pieceArray[0][0]
+                            pieceArray[0][0] = 0
                         turn += 1
                         if turn % 2 == 0:
                             player = 1
