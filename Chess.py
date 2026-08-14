@@ -1,5 +1,6 @@
 import pygame
 from sys import exit
+from evaluation import pieceArray, evaluate_board
 
 pygame.init()
 
@@ -35,17 +36,6 @@ black_right_rook_moved = False
 en_passant_target = None
 
 
-pieceArray = [
-    [-5,-4,-3,-2,-6,-3,-4,-5],
-    [-1,-1,-1,-1,-1,-1,-1,-1],
-    [ 0, 0, 0, 0, 0, 0, 0, 0],
-    [ 0, 0, 0, 0, 0, 0, 0, 0],
-    [ 0, 0, 0, 0, 0, 0, 0, 0],
-    [ 0, 0, 0, 0, 0, 0, 0, 0],
-    [ 1, 1, 1, 1, 1, 1, 1, 1],
-    [ 5, 4, 3, 2, 6, 3, 4, 5]
-]
-
 pieces = {
     -6: BKing,
     -5: BRook,
@@ -61,6 +51,8 @@ pieces = {
     5: WRook,
     6: WKing
 }
+
+
 
 def path_clear(old_row, old_col, new_row, new_col):
 
@@ -570,6 +562,8 @@ while True:
                             player = 1
                         else:
                             player = -1
+
+                        print(f"Evaluation: {evaluate_board()}")
 
                         if is_checkmate(player):
                             print(f"Checkmate! {"Black" if player == 1 else "White"} wins!")
